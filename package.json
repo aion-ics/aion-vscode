@@ -6,6 +6,10 @@
   "engines": {
     "vscode": "^1.97.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aion-ics/aion-vscode.git"
+  },
   "publisher": "aion-dsl-support",
   "categories": [
     "Programming Languages"
