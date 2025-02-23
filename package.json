@@ -1,0 +1,40 @@
+{
+  "name": "aion",
+  "displayName": "Aion",
+  "description": "Aion language support. The language repository - https://github.com/aion-ics/aion (if not public, wait until it is)",
+  "version": "0.2.0",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "publisher": "aion-dsl-support",
+  "categories": [
+    "Programming Languages"
+  ],
+  "icon": "assets/aion_png.png",
+  "contributes": {
+    "languages": [
+      {
+        "id": "aion",
+        "aliases": [
+          "Aion",
+          "aion"
+        ],
+        "extensions": [
+          ".aion"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/aionsmall.png",
+          "dark": "./assets/aionsmall.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "aion",
+        "scopeName": "source.aion",
+        "path": "./syntaxes/aion.tmLanguage.json"
+      }
+    ]
+  }
+}
