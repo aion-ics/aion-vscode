@@ -2,7 +2,7 @@
   "name": "aion",
   "displayName": "Aion",
   "description": "Aion language support. The language repository - https://github.com/aion-ics/aion (if not public, wait until it is)",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "engines": {
     "vscode": "^1.97.0"
   },
