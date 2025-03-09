@@ -7,6 +7,9 @@
 		},
 		{
 			"include": "#strings"
+		},
+		{
+			"include": "#comments"
 		}
 	],
 	"repository": {
@@ -24,6 +27,21 @@
 				{
 					"name": "constant.character.escape.aion",
 					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.double-slash.aion",
+					"begin": "//",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.aion"
+						}
+					},
+					"end": "$\\n?",
+					"patterns": []
 				}
 			]
 		}
