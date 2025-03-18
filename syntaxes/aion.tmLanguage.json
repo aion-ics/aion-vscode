@@ -42,6 +42,22 @@
 					},
 					"end": "$\\n?",
 					"patterns": []
+				},
+				{
+					"name": "comment.block.aion",
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.aion"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.aion"
+						}
+					},
+					"patterns": []
 				}
 			]
 		}
