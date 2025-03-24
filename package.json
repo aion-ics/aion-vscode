@@ -2,7 +2,7 @@
   "name": "aion",
   "displayName": "Aion",
   "description": "Aion language support. The language repository - https://github.com/aion-ics/aion (if not public, wait until it is)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -17,6 +17,7 @@
  
   "scripts": {
       "antlr4ts": "antlr4ts -visitor -o ./src/antlr/generated src/Aion.g4",
+      "ex": "npm run antlr4ts && npm run compile",
       "vscode:prepublish": "npm run compile",
       "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"

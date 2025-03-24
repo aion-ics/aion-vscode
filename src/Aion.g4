@@ -1,175 +1,282 @@
-grammar Aion;
+grammar Aion; // Define the grammar name Aion
 
-// Parser Rules
-program             : statement* ;
+// Root rule: a program is made of zero or more statements and must end with EOF
+program: statement* EOF;
 
+// High-level statement rule, covers all possible top-level instructions
 statement
-    : import_stmt
-    | assignment_stmt
-    | value_assignment_stmt
-    | loop_stmt
-    | export_stmt
-    | merge_stmt
-    | filter_stmt
-    | include_stmt
-    | conditional_stmt
-    | structured_event_stmt
-    | week_start_stmt
-    | default_declaration
+    : import_stmt                 // import external files/modules
+    | assignment_stmt             // assign a declaration to an identifier
+    | value_assignment_stmt       // assign a value expression to an identifier
+    | loop_stmt                   // for-each loop over time units
+    | export_stmt                 // export data
+    | merge_stmt                  // merge multiple identifiers into one
+    | filter_stmt                 // filter data based on a condition
+    | include_stmt                // include one set into another
+    | conditional_stmt            // if / else-if / else conditional logic
+    | structured_event_stmt       // structured event block with fields
+    | week_start_stmt             // set the starting week number for an identifier
+    | default_declaration         // declare new default events, tasks, or pomodoros
     ;
 
-import_stmt         : 'import' STRING 'as' IDENTIFIER ';' ;
+// Import statement: imports another file and assigns it an alias
+import_stmt: 'import' string 'as' identifier ';';
 
-assignment_stmt     : IDENTIFIER '=' declaration ';' ;
+// Assignment of a declaration to a variable
+assignment_stmt: identifier '=' declaration ';';
 
-value_assignment_stmt
-                    : IDENTIFIER '=' value_expr ';' ;
+// Assignment of a value (date, time, etc.) to a variable
+value_assignment_stmt: identifier '=' value_expr ';';
 
-default_declaration : ('$$$')? 'new'? ( event_decl | task_decl | pomodoro_decl ) ';' ;
+// Declare an event, task, or pomodoro as default, optionally with 'new'
+default_declaration
+    : ('new')? (event_decl | task_decl | pomodoro_decl) ';'
+    ;
 
-declaration         : event_decl
-                    | task_decl
-                    | pomodoro_decl
-                    ;
+// A declaration could be an event, a task, or a pomodoro
+declaration
+    : event_decl
+    | task_decl
+    | pomodoro_decl
+    ;
 
-event_decl          : 'event' STRING event_timing
-                    | 'event' STRING temporal_expr ('for' duration)? 
-                    ;
+// Basic event declaration with a name and a time expression
+event_decl
+    : 'event' string event_time_expr event_time_strict
+    | 'event' string repetition_in_decl event_time_strict 
+    ;
 
-event_timing        : 'on' date_specifier ('from' time 'to' time)?
-                    | 'on' date_specifier ('at' time)? ('for' duration)?
-                    | 'every' weekday ('from' time 'to' time)?
-                    | 'every' weekday ('at' time)? ('for' duration)?
-                    | 'from' time 'to' time
-                    | 'at' time ('for' duration)?
-                    | 'find' 'between' time 'and' time
-                    ;
+// Task declaration with optional scheduling strategy
+task_decl
+    : 'task' string event_time_expr rep_period? task_time_strict
+    ;
 
-temporal_expr       : 'daily' ('at' time)?
-                    | 'weekly' ('at' time)?
-                    | 'monthly' ('at' time)?
-                    | 'yearly' ('at' time)?
-                    ;
+repetition_in_decl
+    : 'each' weekday
+    | rep_period
+    ;
 
+task_time_strict
+    : ('at') time
+    | 'find between' time 'and' time ('using' strategy)?
+    ;
+
+event_time_strict
+    : ('at' | 'from') time (('for' duration) | ('to' time))
+    | 'find between' time 'and' time ('using' strategy)?
+    ;
+
+event_time_expr 
+    : 'on' date
+    ;
+
+rep_period
+    : 'daily' |
+    'weekly' |
+    'yearly' 
+;
+
+// Pomodoro session declaration with repetition and optional pause
+pomodoro_decl
+    : 'pomodoro' string 'at' time 'repeat' number 'times'
+      ('every' duration)?                     // optional interval between sessions
+      ('with' duration 'pause')?              // optional pause duration between sessions
+    ;
+
+// Structured event statement: allows defining multiple fields in block format
 structured_event_stmt
-                    : 'event' IDENTIFIER '{' structured_event_field* '}' ;
+    : 'event' identifier '{' structured_event_field* '}'
+    ;
 
+// Define fields of a structured event (name, start time, duration, etc.)
 structured_event_field
-                    : 'name' ':' STRING ','?
-                    | 'start' ':' time ','?
-                    | 'duration' ':' duration ','?
-                    | 'location' ':' STRING ','?
-                    | 'category' ':' STRING ','?
-                    ;
+    : 'name' ':' string ','
+    | 'start' ':' time ','
+    | 'duration' ':' duration ','
+    | 'location' ':' string ','
+    | 'category' ':' string ','
+    ;
 
-week_start_stmt     : IDENTIFIER '=' 'weeknumber' '(' date ')' ';' ;
+// Loop statement: iterates over a time range or sequence
+loop_stmt
+    : 'each' loop_unit 'from' loop_start 'to' loop_end ('step' number)? '{' statement* '}'
+    ;
 
-task_decl           : 'task' STRING temporal_expr ('for' duration)?
-                    | 'task' STRING 'find' 'between' time 'and' time ('using' strategy)?
-                    ;
+// Loop start can be a date, identifier, or "today"
+loop_start
+    : date
+    | identifier
+    | 'today'
+    ;
 
-pomodoro_decl       : 'pomodoro' STRING 'at' time 'repeat' NUMBER 'times' 
-                      ('every' duration)? ('with' duration 'pause')? ;
+// Loop end can be a date, identifier, or an expression involving loop start
+loop_end
+    : date
+    | identifier
+    | loop_start '+' number
+    ;
 
-loop_stmt           : 'iterate' loop_unit 'from' loop_start 'to' loop_end ('step' NUMBER)? '{' statement* '}' ;
+// Loop unit specifies the unit of iteration (day, week, month)
+loop_unit
+    : 'day' | 'days'
+    | 'week' | 'weeks'
+    | 'month' | 'months'
+    ;
 
-loop_start          : date
-                    | IDENTIFIER
-                    | 'today'
-                    ;
+// Conditional statement: if-else logic
+conditional_stmt
+    : 'if' '(' condition ')' '{' statement* '}'
+      ('else' 'if' '(' condition ')' '{' statement* '}')*
+      ('else' '{' statement* '}')?
+    ;
 
-loop_end            : date
-                    | IDENTIFIER
-                    | loop_start '+' NUMBER
-                    ;
+// Filter statement: applies a condition to filter data
+filter_stmt
+    : 'filter' identifier 'where' condition 'into' identifier ';'
+    ;
 
-loop_unit           : 'day' | 'days' | 'week' | 'weeks' | 'month' | 'months' ;
+// Merge statement: merges a list of identifiers into one
+merge_stmt
+    : 'merge' identifier_list 'into' identifier ';'
+    ;
 
-conditional_stmt    : 'if' '(' condition ')' '{' statement* '}'
-                      ( 'else' 'if' '(' condition ')' '{' statement* '}' )*
-                      ( 'else' '{' statement* '}' )?
-                      ;
+// List of identifiers, separated by commas
+identifier_list
+    : identifier (',' identifier)*
+    ;
 
-filter_stmt         : 'filter' IDENTIFIER 'where' condition 'into' IDENTIFIER ';' ;
+// Include statement: includes an identifier within another identifier
+include_stmt
+    : 'include' identifier 'in' identifier ';'
+    ;
 
-merge_stmt          : 'merge' identifier_list 'into' IDENTIFIER ';' ;
+// Export statement: exports data to an external source
+export_stmt
+    : 'export' identifier ('as' string)? ';'
+    | 'export' 'default' 'as' string ';'
+    | 'export' 'all' ';'
+    ;
 
-identifier_list     : IDENTIFIER (',' IDENTIFIER)* ;
+// Set the starting week number for an identifier
+week_start_stmt
+    : identifier '=' 'weeknumber' '(' date ')' ';'
+    ;
 
-include_stmt        : 'include' IDENTIFIER 'in' IDENTIFIER ';' ;
+// Condition for comparison (identifier, count, category)
+condition
+    : identifier comparison_op value
+    | 'count' '(' weekday ')' 'in' 'month' comparison_op number
+    | 'category' comparison_op string
+    ;
 
-export_stmt         : 'export' IDENTIFIER ( 'as' STRING )? ';'
-                    | 'export' 'default' 'as' STRING ';'
-                    | 'export' 'all' ';'
-                    ;
+// Comparison operators for conditions
+comparison_op
+    : '==' | '!=' | '<' | '<=' | '>' | '>='
+    ;
 
-condition           : IDENTIFIER comparison_op value
-                    | 'count' '(' weekday ')' 'in' 'month' comparison_op NUMBER
-                    | 'category' comparison_op STRING
-                    ;
+// Strategy options for scheduling tasks (random, earliest, latest)
+strategy
+    : 'random' | 'earliest' | 'latest'
+    ;
 
-comparison_op       : '==' | '!=' | '<' | '<=' | '>' | '>=' ;
+// Value expressions (date, time, string, number, etc.)
+value_expr
+    : date
+    | time
+    | duration
+    | string
+    | number
+    | identifier
+    | function_call
+    ;
 
-strategy            : 'random' | 'earliest' | 'latest' ;
+// Function calls (count occurrences or get the week number for a date)
+function_call
+    : 'count' '(' weekday ')' 'in' 'month'
+    | 'weeknumber' '(' date ')'
+    ;
 
-value_expr          : date
-                    | time
-                    | duration
-                    | STRING
-                    | NUMBER
-                    | IDENTIFIER
-                    | function_call
-                    ;
+// Primitives and Terminals
 
-function_call       : 'count' '(' weekday ')' 'in' 'month'
-                    | 'weeknumber' '(' date ')'
-                    ;
+// Date format (e.g., 2024.03 or 2024.03.24)
+date
+    : number '.' number ('.' number)?   
+    ;
 
-date                : NUMBER '.' NUMBER '.' NUMBER     // YYYY.MM.DD
-                    ;
+// Time format (HH:MM)
+time
+    : number ':' number                 
+    ;
 
-date_specifier      : date
-                    | weekday
-                    | ordinal_specifier weekday
-                    | ordinal_specifier month_name
-                    ;
+// Duration format (e.g., 2h, 3m, 5h 30m)
+duration
+    : number time_unit (number time_unit)*
+    ;
 
-ordinal_specifier   : NUMBER ('st'|'nd'|'rd'|'th') ;
+// Time units (hours or minutes)
+time_unit
+    : 'h' | 'm'
+    ;
 
-weekday             : 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday'
-                    | 'Friday' | 'Saturday' | 'Sunday'
-                    | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
-                    ;
+// Values can be a string, number, identifier, etc.
+value
+    : string
+    | number
+    | identifier
+    ;
 
-time                : NUMBER ':' NUMBER
-                    ;
+// Identifier: names for variables, events, tasks, etc.
+identifier
+    : Identifier
+    ;
 
-duration            : NUMBER time_unit (NUMBER time_unit)*
-                    ;
+// String: double-quoted string literals
+string
+    : String
+    ;
 
-time_unit           : 'h' | 'm' | 'min' | 'hour' | 'hours' | 'minute' | 'minutes'
-                    ;
+// Number: integers
+number
+    : Number
+    ;
 
-value               : STRING
-                    | NUMBER
-                    | IDENTIFIER
-                    ;
+// Weekday: days of the week (both full and abbreviated names)
+weekday
+    : 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'
+    | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
+    ;
+
+// Month names (both full and abbreviated)
+month_name
+    : 'January' | 'February' | 'March' | 'April' | 'May' | 'June'
+    | 'July' | 'August' | 'September' | 'October' | 'November' | 'December'
+    | 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun'
+    | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
+    ;
 
 // Lexer Rules
-IDENTIFIER          : [a-zA-Z_] [a-zA-Z0-9_]* ;
 
-STRING              : '"' ( ~["\\] | '\\' . )* '"' ;
+// Identifier: starts with a letter or underscore, followed by letters, digits, or underscores
+Identifier
+    : [a-zA-Z_] [a-zA-Z0-9_]*
+    ;
 
-NUMBER              : [0-9]+ ;
+// String: double-quoted string literals
+String
+    : '"' (~["\\] | '\\' .)* '"'
+    ;
 
-// Skip whitespace and comments
-WS                  : [ \t\r\n]+ -> skip ;
+// Number: integer numbers
+Number
+    : [0-9]+
+    ;
 
-COMMENT             : '//' ~[\r\n]* -> skip ;
+// Whitespace: skip spaces, tabs, and newlines
+WS
+    : [ \t\r\n]+ -> skip
+    ;
 
-month_name          : 'January' | 'February' | 'March' | 'April' | 'May' | 'June'
-                    | 'July' | 'August' | 'September' | 'October' | 'November' | 'December'
-                    | 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun'
-                    | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
-                    | 'March'
-                    ;
+// Single-line comments: skip anything after // until the end of the line
+LINE_COMMENT
+    : '//' ~[\r\n]* -> skip
+    ;
