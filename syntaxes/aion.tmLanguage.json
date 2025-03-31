@@ -11,12 +11,14 @@
 		{
 			"include": "#comments"
 		}
+	
+		
 	],
 	"repository": {
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.aion",
-				"match": "\\b(if|while|for|return)\\b"
+				"match": "\\b(if|while|event|task|pomodoro)\\b"
 			}]
 		},
 		"strings": {
@@ -30,6 +32,7 @@
 				}
 			]
 		},
+		
 		"comments": {
 			"patterns": [
 				{
